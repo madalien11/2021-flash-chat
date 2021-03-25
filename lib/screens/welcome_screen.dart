@@ -1,7 +1,11 @@
+import 'package:flash_chat/screens/chat_screen.dart';
+
 import '../widgets/mainButton.dart';
-import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'registration_screen.dart';
+
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -13,8 +17,20 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen>
     with SingleTickerProviderStateMixin {
+  final _auth = FirebaseAuth.instance;
   AnimationController controller;
   Animation animation;
+
+  bool _isLoggedIn() {
+    try {
+      if (_auth.currentUser != null) {
+        return true;
+      }
+    } catch (e) {
+      print(e);
+    }
+    return false;
+  }
 
   @override
   void initState() {
@@ -87,7 +103,10 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 title: 'Log In',
                 color: Colors.amberAccent,
                 onPressed: () {
-                  Navigator.pushNamed(context, LoginScreen.id);
+                  if (_isLoggedIn())
+                    Navigator.pushNamed(context, ChatScreen.id);
+                  else
+                    Navigator.pushNamed(context, LoginScreen.id);
                 },
               ),
             ),
