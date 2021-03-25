@@ -29,17 +29,25 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  void _getMessages() async {
-    final messages = await _fireStore.collection('messages').get();
-    for (var m in messages.docs) {
-      print(m.data());
-    }
+  // void _getMessages() async {
+  //   final messages = await _fireStore.collection('messages').get();
+  //   for (var m in messages.docs) {
+  //     print(m.data());
+  //   }
+  // }
+
+  void _messagesStream() async {
+    await for (var snapshot in _fireStore.collection('messages').snapshots())
+      for (var m in snapshot.docs) {
+        print(m.data());
+      }
   }
 
   @override
   void initState() {
     super.initState();
     _getCurrentUser();
+    _messagesStream();
   }
 
   @override
