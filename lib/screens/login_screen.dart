@@ -93,8 +93,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       FocusScope.of(context).unfocus();
                       try {
                         final newUser = await _auth.signInWithEmailAndPassword(
-                            email: username + '@random.com',
-                            password: password);
+                            email: username.trimRight() + '@random.com',
+                            password: password.trimRight());
                         if (newUser != null) {
                           Navigator.pushNamed(context, ChatScreen.id);
                           _usernameController.clear();
