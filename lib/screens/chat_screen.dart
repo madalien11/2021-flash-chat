@@ -1,5 +1,6 @@
 import 'welcome_screen.dart';
 import '../constants.dart';
+import '../widgets/messageStream.dart';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,33 +23,16 @@ class _ChatScreenState extends State<ChatScreen> {
   void _getCurrentUser() {
     try {
       final user = _auth.currentUser;
-      if (user != null) {
-        loggedInUser = user;
-      }
+      if (user != null) loggedInUser = user;
     } catch (e) {
       print(e);
     }
-  }
-
-  // void _getMessages() async {
-  //   final messages = await _fireStore.collection('messages').get();
-  //   for (var m in messages.docs) {
-  //     print(m.data());
-  //   }
-  // }
-
-  void _messagesStream() async {
-    await for (var snapshot in _fireStore.collection('messages').snapshots())
-      for (var m in snapshot.docs) {
-        print(m.data());
-      }
   }
 
   @override
   void initState() {
     super.initState();
     _getCurrentUser();
-    _messagesStream();
   }
 
   @override
@@ -77,7 +61,7 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            MessageStream(fireStore: _fireStore),
+            MessageStream(fireStore: _fireStore, loggedInUser: loggedInUser),
             Container(
               decoration: kMessageContainerDecoration,
               child: Row(
@@ -97,6 +81,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       _fireStore.collection('messages').add({
                         'sender': loggedInUser.email,
                         'text': messageText,
+                        'serverTime': FieldValue.serverTimestamp(),
                       });
                       _messageTextController.clear();
                     },
@@ -110,84 +95,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class MessageStream extends StatelessWidget {
-  const MessageStream({
-    @required FirebaseFirestore fireStore,
-  }) : _fireStore = fireStore;
-
-  final FirebaseFirestore _fireStore;
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-        stream: _fireStore.collection('messages').snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return Center(
-              child: Text(
-                'No text messages yet...',
-                style: TextStyle(color: Colors.white),
-              ),
-            );
-          }
-          final messages = snapshot.data.docs;
-          List<MessageBubble> messageBubbles = [];
-          for (var m in messages) {
-            messageBubbles.add(
-              MessageBubble(
-                text: m.data()['text'],
-                sender: m.data()['sender'],
-              ),
-            );
-          }
-          return Expanded(
-            child: ListView(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-              children: messageBubbles,
-            ),
-          );
-        });
-  }
-}
-
-class MessageBubble extends StatelessWidget {
-  final String text;
-  final String sender;
-
-  MessageBubble({this.text, this.sender});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(10.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 15),
-            child: Text(
-              sender.replaceRange(sender.indexOf('@'), sender.length, ''),
-              style: TextStyle(fontSize: 12, color: Colors.white60),
-            ),
-          ),
-          Material(
-            elevation: 5.0,
-            borderRadius: BorderRadius.circular(30),
-            color: Colors.amberAccent,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Text(
-                text,
-                style: TextStyle(fontSize: 15, color: Colors.black),
-              ),
-            ),
-          )
-        ],
       ),
     );
   }
